@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react'
 import './App.css'
-
+// custom hook
 import { useFetch } from './hooks/useFetch'
 
 const url = "http://localhost:3000/products"
 
 function App() {
   const [products, setProducts] = useState([])
-  const {data} = useFetch(url)
+  // custom
+  const {data: items, httpConfig, loading, error} = useFetch(url)
 
   const [name, setName] = useState("")
   const [price, setPrice] = useState("")
@@ -35,8 +36,7 @@ function App() {
       price,
     };
 
-    console.log(product)
-    const res = await fetch(url, {
+    /* const res = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -45,23 +45,36 @@ function App() {
     });
 
     const addedProduct = await res.json();
-    setProducts((prevProducts) => [...prevProducts, addedProduct]);
+    setProducts((prevProducts) => [...prevProducts, addedProduct]); */
+
+    //refatorando POST
+    httpConfig(product, "POST")
     
     setName("")
     setPrice("")
   };
 
+  const handleRemove = (id) => {
+    httpConfig(id, "DELETE");
+  }
 
   return (
     <div className="App">
       <h1>Lista de produto</h1>
-      <ul>
-        {products.map((product) => (
-          <li key={product.id}>
-            {product.name} - R$: {product.price}
-          </li>
-        ))}
-      </ul>
+      {/* Loading */}
+      {loading && <p>Carregando dados...</p>}
+      {error && <p>{error}</p>}
+      {!error && (
+        <ul>
+          {items && items.map((product) => (
+            <li key={product.id}>
+              {product.name} - R$: {product.price}
+              <button onClick={() => handleRemove(product.id)}>Excluir</button>
+            </li>
+          ))}
+        </ul>
+      )}
+      
 
       <div className='add-product'>
         <form onSubmit={handleSubmit}>
@@ -83,8 +96,9 @@ function App() {
             onChange={(e) => setPrice(e.target.value)}
             />
           </label>
-
-          <input type="submit" value="Cadastrar produto" />
+          {/* State de loading no post */}
+          {!loading && <input type="submit" value="Cadastrar produto" />}
+          
 
         </form>
       </div>
